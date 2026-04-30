@@ -1,0 +1,56 @@
+[2m11:13:37 pm[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./pages/AuthPage" from "src/App.jsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Sneha Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/src/App.jsx[39m:4:21
+[33m  3  |  import { useEffect, useMemo, useState } from "react";
+  4  |  import api, { setAuthToken } from "./api";
+  5  |  import AuthPage from "./pages/AuthPage";
+     |                        ^
+  6  |  import HeadDashboard from "./pages/HeadDashboard";
+  7  |  import ProviderDashboard from "./pages/ProviderDashboard";[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:29003:43)
+      at TransformPluginContext.error (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:29000:14)
+      at normalizeUrl (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:27123:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:27181:32
+      at async Promise.all (index 3)
+      at async TransformPluginContext.transform (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:27149:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:28801:14)
+      at async loadAndTransform (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:24546:20)
+[2m11:13:37 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "./pages/AuthPage" from "src/App.jsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Sneha Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/src/App.jsx[39m:4:21
+[33m  3  |  import { useEffect, useMemo, useState } from "react";
+  4  |  import api, { setAuthToken } from "./api";
+  5  |  import AuthPage from "./pages/AuthPage";
+     |                        ^
+  6  |  import HeadDashboard from "./pages/HeadDashboard";
+  7  |  import ProviderDashboard from "./pages/ProviderDashboard";[39m
+[2m11:13:37 pm[22m [31m[1m[vite][22m[39m [31mInternal server error: Failed to resolve import "./pages/HeadDashboard" from "src/App.jsx". Does the file exist?[39m
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Sneha Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/src/App.jsx[39m:5:26
+[33m  4  |  import api, { setAuthToken } from "./api";
+  5  |  import AuthPage from "./pages/AuthPage";
+  6  |  import HeadDashboard from "./pages/HeadDashboard";
+     |                             ^
+  7  |  import ProviderDashboard from "./pages/ProviderDashboard";
+  8  |  import StudentDashboard from "./pages/StudentDashboard";[39m
+      at TransformPluginContext._formatLog (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:29003:43)
+      at TransformPluginContext.error (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:29000:14)
+      at normalizeUrl (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:27123:18)
+      at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+      at async file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:27181:32
+      at async Promise.all (index 4)
+      at async TransformPluginContext.transform (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:27149:4)
+      at async EnvironmentPluginContainer.transform (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:28801:14)
+      at async loadAndTransform (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:22670:26)
+      at async viteTransformMiddleware (file:///C:/Users/Sneha%20Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/node_modules/vite/dist/node/chunks/config.js:24546:20)
+[2m11:13:38 pm[22m [31m[1m[vite][22m[39m [31m[2m(client)[22m[39m Pre-transform error: Failed to resolve import "../utils/validation" from "src/pages/AuthPage.jsx". Does the file exist?
+  Plugin: [35mvite:import-analysis[39m
+  File: [36mC:/Users/Sneha Hudge/Documents/Codex/2026-04-28/hey-please-create-the-web-application/client/src/pages/AuthPage.jsx[39m:3:59
+[33m  2  |  import Field from "../components/common/Field";
+  3  |  import FlashMessage from "../components/common/FlashMessage";
+  4  |  import { getRegisterSuggestion, getSignInSuggestion } from "../utils/validation";
+     |                                                              ^
+  5  |  function AuthPage({
+  6  |    authMode,[39m
