@@ -283,7 +283,7 @@ function App() {
     event.preventDefault();
     const nextErrors = validateChangePassword(changePasswordForm);
     setFormErrors("changePassword", nextErrors);
-    if (Object.keys(nextErrors).length) return;
+    if (Object.keys(nextErrors).length) return false;
 
     try {
       await api.patch("/auth/change-password", {
@@ -292,8 +292,10 @@ function App() {
       });
       setChangePasswordForm(createEmptyChangePasswordForm());
       notify("Password changed successfully.");
+      return true;
     } catch (error) {
       notify(error.response?.data?.message || "Unable to change password.", "error");
+      return false;
     }
   };
 

@@ -1,9 +1,12 @@
+import { useMemo, useState } from "react";
+
 import DashboardShell from "../components/common/DashboardShell";
 import EmptyState from "../components/common/EmptyState";
 import Field from "../components/common/Field";
 import FilterBar from "../components/common/FilterBar";
 import InfoGrid from "../components/common/InfoGrid";
 import JobCard from "../components/common/JobCard";
+import Modal from "../components/common/Modal";
 import PasswordPanel from "../components/common/PasswordPanel";
 
 function ProviderDashboard({
@@ -30,167 +33,248 @@ function ProviderDashboard({
   stats,
   user
 }) {
+  const [activeSection, setActiveSection] = useState("jobs");
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [jobToDelete, setJobToDelete] = useState(null);
+
+  const navItems = useMemo(
+    () => [
+      { id: "jobs", label: "Jobs", note: "Create, edit, and review postings" },
+      { id: "profile", label: "Profile", note: "Provider details and contacts" },
+      { id: "security", label: "Security", note: "Password management" }
+    ],
+    []
+  );
+
   return (
     <DashboardShell
+      activeSection={activeSection}
       message={message}
+      navItems={navItems}
       onLogout={onLogout}
       onRefresh={onRefresh}
+      onSectionChange={setActiveSection}
       stats={stats}
       subtitle="Submit work opportunities, keep your provider details current, and manage pending jobs before approval."
       title="Provider Dashboard"
       user={user}
     >
-      <section className="dashboard-grid">
-        <div className="panel panel-stack">
-          <div className="panel-heading">
-            <div>
-              <h2>{editingJobId ? "Edit Pending Job" : "Register New Work"}</h2>
-              <p className="section-note">Only pending jobs can be edited or deleted before department review.</p>
+      {activeSection === "jobs" ? (
+        <section className="dashboard-grid">
+          <div className="panel panel-stack">
+            <div className="panel-heading">
+              <div>
+                <h2>{editingJobId ? "Edit Pending Job" : "Register New Work"}</h2>
+                <p className="section-note">Only pending jobs can be edited or deleted before department review.</p>
+              </div>
             </div>
-          </div>
-          <form className="form-grid" onSubmit={onSubmitJob}>
-            <Field error={errors.job.title} label="Work title">
-              <input value={jobForm.title} onChange={(event) => onJobFormChange({ ...jobForm, title: event.target.value })} required />
-            </Field>
-            <Field error={errors.job.workType} label="Work type">
-              <select value={jobForm.workType} onChange={(event) => onJobFormChange({ ...jobForm, workType: event.target.value })}>
-                <option value="On-site">On-site</option>
-                <option value="Remote">Remote</option>
-                <option value="Hybrid">Hybrid</option>
-              </select>
-            </Field>
-            <Field error={errors.job.location} label="Location">
-              <input value={jobForm.location} onChange={(event) => onJobFormChange({ ...jobForm, location: event.target.value })} required />
-            </Field>
-            <Field error={errors.job.pay} label="Payment amount (INR)">
-              <input type="number" value={jobForm.pay} onChange={(event) => onJobFormChange({ ...jobForm, pay: event.target.value })} required />
-            </Field>
-            <Field error={errors.job.hours} label="Work hours">
-              <input value={jobForm.hours} onChange={(event) => onJobFormChange({ ...jobForm, hours: event.target.value })} required />
-            </Field>
-            <Field error={errors.job.positions} label="Number of students needed">
-              <input type="number" value={jobForm.positions} onChange={(event) => onJobFormChange({ ...jobForm, positions: event.target.value })} required />
-            </Field>
-            <Field className="full-width" error={errors.job.skills} label="Skills required">
-              <input value={jobForm.skills} onChange={(event) => onJobFormChange({ ...jobForm, skills: event.target.value })} />
-            </Field>
-            <Field className="full-width" error={errors.job.description} label="Work description">
-              <textarea rows="4" value={jobForm.description} onChange={(event) => onJobFormChange({ ...jobForm, description: event.target.value })} required />
-            </Field>
-            <div className="full-width inline-actions">
-              <button className="primary-button" type="submit">
-                {editingJobId ? "Save Changes" : "Submit For Approval"}
-              </button>
-              {editingJobId ? (
-                <button className="ghost-button" onClick={onCancelEditingJob} type="button">
-                  Cancel Edit
+            <form className="form-grid" onSubmit={onSubmitJob}>
+              <Field error={errors.job.title} label="Work title">
+                <input value={jobForm.title} onChange={(event) => onJobFormChange({ ...jobForm, title: event.target.value })} required />
+              </Field>
+              <Field error={errors.job.workType} label="Work type">
+                <select value={jobForm.workType} onChange={(event) => onJobFormChange({ ...jobForm, workType: event.target.value })}>
+                  <option value="On-site">On-site</option>
+                  <option value="Remote">Remote</option>
+                  <option value="Hybrid">Hybrid</option>
+                </select>
+              </Field>
+              <Field error={errors.job.location} label="Location">
+                <input value={jobForm.location} onChange={(event) => onJobFormChange({ ...jobForm, location: event.target.value })} required />
+              </Field>
+              <Field error={errors.job.pay} label="Payment amount (INR)">
+                <input type="number" value={jobForm.pay} onChange={(event) => onJobFormChange({ ...jobForm, pay: event.target.value })} required />
+              </Field>
+              <Field error={errors.job.hours} label="Work hours">
+                <input value={jobForm.hours} onChange={(event) => onJobFormChange({ ...jobForm, hours: event.target.value })} required />
+              </Field>
+              <Field error={errors.job.positions} label="Number of students needed">
+                <input type="number" value={jobForm.positions} onChange={(event) => onJobFormChange({ ...jobForm, positions: event.target.value })} required />
+              </Field>
+              <Field className="full-width" error={errors.job.skills} label="Skills required">
+                <input value={jobForm.skills} onChange={(event) => onJobFormChange({ ...jobForm, skills: event.target.value })} />
+              </Field>
+              <Field className="full-width" error={errors.job.description} label="Work description">
+                <textarea rows="4" value={jobForm.description} onChange={(event) => onJobFormChange({ ...jobForm, description: event.target.value })} required />
+              </Field>
+              <div className="full-width inline-actions">
+                <button className="primary-button" type="submit">
+                  {editingJobId ? "Save Changes" : "Submit For Approval"}
                 </button>
-              ) : null}
-            </div>
-          </form>
-        </div>
-
-        <div className="panel panel-stack">
-          <div className="panel-heading">
-            <div>
-              <h2>Edit Provider Profile</h2>
-              <p className="section-note">This information is attached to jobs automatically. Keep it accurate.</p>
-            </div>
+                {editingJobId ? (
+                  <button className="ghost-button" onClick={onCancelEditingJob} type="button">
+                    Cancel Edit
+                  </button>
+                ) : null}
+              </div>
+            </form>
           </div>
-          <form className="form-grid" onSubmit={onProfileSubmit}>
-            <Field error={errors.profile.name} label="Full name">
-              <input value={profileForm.name || ""} onChange={(event) => onProfileFormChange({ ...profileForm, name: event.target.value })} required />
-            </Field>
-            <Field error={errors.profile.phone} label="Phone number">
-              <input value={profileForm.phone || ""} onChange={(event) => onProfileFormChange({ ...profileForm, phone: event.target.value })} required />
-            </Field>
-            <Field className="full-width" error={errors.profile.organizationName} label="Organization name">
-              <input value={profileForm.organizationName || ""} onChange={(event) => onProfileFormChange({ ...profileForm, organizationName: event.target.value })} required />
-            </Field>
-            <Field error={errors.profile.providerType} label="Provider type">
-              <select value={profileForm.providerType || "Organization"} onChange={(event) => onProfileFormChange({ ...profileForm, providerType: event.target.value })}>
-                <option value="Organization">Organization</option>
-                <option value="Person">Person</option>
-              </select>
-            </Field>
-            <Field error={errors.profile.officeLocation} label="Office location">
-              <input value={profileForm.officeLocation || ""} onChange={(event) => onProfileFormChange({ ...profileForm, officeLocation: event.target.value })} required />
-            </Field>
-            <div className="full-width inline-actions">
-              <button className="secondary-button" type="submit">
-                Save Profile
-              </button>
-            </div>
-          </form>
-          <InfoGrid
-            items={[
-              ["Email", user.email],
-              ["Organization", profileForm.organizationName || "Not set"],
-              ["Provider type", profileForm.providerType || "Not set"],
-              ["Location", profileForm.officeLocation || "Not set"]
-            ]}
-          />
-        </div>
-      </section>
 
-      <section className="dashboard-grid">
-        <PasswordPanel
-          errors={errors.changePassword}
-          form={changePasswordForm}
-          onChange={onChangePasswordForm}
-          onSubmit={onChangePasswordSubmit}
-        />
-
-        <section className="panel panel-stack">
-          <div className="panel-heading">
-            <div>
-              <h2>Your Submitted Work</h2>
-              <p className="section-note">Use search to find jobs quickly and manage pending items directly from the list.</p>
+          <section className="panel panel-stack">
+            <div className="panel-heading">
+              <div>
+                <h2>Your Submitted Work</h2>
+                <p className="section-note">Use search to find jobs quickly and manage pending items directly from the list.</p>
+              </div>
             </div>
-          </div>
-          <FilterBar>
-            <input
-              className="search-input"
-              placeholder="Search by title, location, or organization"
-              value={filters.providerJobs}
-              onChange={(event) => onApplyFilter({ ...filters, providerJobs: event.target.value })}
+            <FilterBar>
+              <input
+                className="search-input"
+                placeholder="Search by title, location, or organization"
+                value={filters.providerJobs}
+                onChange={(event) => onApplyFilter({ ...filters, providerJobs: event.target.value })}
+              />
+            </FilterBar>
+            <div className="card-list">
+              {filteredJobs.length ? (
+                filteredJobs.map((job) => (
+                  <JobCard
+                    key={job.id}
+                    actions={
+                      job.status === "pending"
+                        ? [
+                            <button
+                              className="secondary-button"
+                              key="edit"
+                              onClick={() => {
+                                onEditJob(job);
+                                setActiveSection("jobs");
+                              }}
+                              type="button"
+                            >
+                              Edit
+                            </button>,
+                            <button className="danger-button" key="delete" onClick={() => setJobToDelete(job)} type="button">
+                              Delete
+                            </button>
+                          ]
+                        : null
+                    }
+                    job={job}
+                  >
+                    {job.approvedStudentDetails?.length ? (
+                      <p className="helper-text">
+                        <strong>Approved students:</strong>{" "}
+                        {job.approvedStudentDetails.map((student) => `${student.name} (${student.phone})`).join(", ")}
+                      </p>
+                    ) : (
+                      <p className="helper-text">No students approved for this job yet.</p>
+                    )}
+                  </JobCard>
+                ))
+              ) : (
+                <EmptyState message="No jobs match your current search." />
+              )}
+            </div>
+          </section>
+        </section>
+      ) : null}
+
+      {activeSection === "profile" ? (
+        <section className="dashboard-single">
+          <div className="panel panel-stack panel-narrow">
+            <div className="panel-heading">
+              <div>
+                <h2>Edit Provider Profile</h2>
+                <p className="section-note">This information is attached to jobs automatically. Keep it accurate.</p>
+              </div>
+            </div>
+            <form className="form-grid" onSubmit={onProfileSubmit}>
+              <Field error={errors.profile.name} label="Full name">
+                <input value={profileForm.name || ""} onChange={(event) => onProfileFormChange({ ...profileForm, name: event.target.value })} required />
+              </Field>
+              <Field error={errors.profile.phone} label="Phone number">
+                <input value={profileForm.phone || ""} onChange={(event) => onProfileFormChange({ ...profileForm, phone: event.target.value })} required />
+              </Field>
+              <Field className="full-width" error={errors.profile.organizationName} label="Organization name">
+                <input value={profileForm.organizationName || ""} onChange={(event) => onProfileFormChange({ ...profileForm, organizationName: event.target.value })} required />
+              </Field>
+              <Field error={errors.profile.providerType} label="Provider type">
+                <select value={profileForm.providerType || "Organization"} onChange={(event) => onProfileFormChange({ ...profileForm, providerType: event.target.value })}>
+                  <option value="Organization">Organization</option>
+                  <option value="Person">Person</option>
+                </select>
+              </Field>
+              <Field error={errors.profile.officeLocation} label="Office location">
+                <input value={profileForm.officeLocation || ""} onChange={(event) => onProfileFormChange({ ...profileForm, officeLocation: event.target.value })} required />
+              </Field>
+              <div className="full-width inline-actions">
+                <button className="secondary-button" type="submit">
+                  Save Profile
+                </button>
+              </div>
+            </form>
+            <InfoGrid
+              items={[
+                ["Email", user.email],
+                ["Organization", profileForm.organizationName || "Not set"],
+                ["Provider type", profileForm.providerType || "Not set"],
+                ["Location", profileForm.officeLocation || "Not set"]
+              ]}
             />
-          </FilterBar>
-          <div className="card-list">
-            {filteredJobs.length ? (
-              filteredJobs.map((job) => (
-                <JobCard
-                  key={job.id}
-                  actions={
-                    job.status === "pending"
-                      ? [
-                          <button className="secondary-button" key="edit" onClick={() => onEditJob(job)} type="button">
-                            Edit Pending Job
-                          </button>,
-                          <button className="danger-button" key="delete" onClick={() => onDeleteJob(job.id)} type="button">
-                            Delete Pending Job
-                          </button>
-                        ]
-                      : null
-                  }
-                  job={job}
-                >
-                  {job.approvedStudentDetails?.length ? (
-                    <p className="helper-text">
-                      <strong>Approved students:</strong>{" "}
-                      {job.approvedStudentDetails.map((student) => `${student.name} (${student.phone})`).join(", ")}
-                    </p>
-                  ) : (
-                    <p className="helper-text">No students approved for this job yet.</p>
-                  )}
-                </JobCard>
-              ))
-            ) : (
-              <EmptyState message="No jobs match your current search." />
-            )}
           </div>
         </section>
-      </section>
+      ) : null}
+
+      {activeSection === "security" ? (
+        <section className="dashboard-single">
+          <div className="panel panel-stack panel-narrow">
+            <div className="panel-heading">
+              <div>
+                <h2>Security</h2>
+                <p className="section-note">Keep your account secure with a password change when needed.</p>
+              </div>
+            </div>
+            <button className="secondary-button" onClick={() => setIsPasswordModalOpen(true)} type="button">
+              Change Password
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {isPasswordModalOpen ? (
+        <Modal onClose={() => setIsPasswordModalOpen(false)} title="Change Password">
+          <PasswordPanel
+            errors={errors.changePassword}
+            form={changePasswordForm}
+            onChange={onChangePasswordForm}
+            onSubmit={async (event) => {
+              const success = await onChangePasswordSubmit(event);
+              if (success) {
+                setIsPasswordModalOpen(false);
+              }
+            }}
+          />
+        </Modal>
+      ) : null}
+
+      {jobToDelete ? (
+        <Modal
+          actions={
+            <>
+              <button className="ghost-button" onClick={() => setJobToDelete(null)} type="button">
+                Cancel
+              </button>
+              <button
+                className="danger-button"
+                onClick={() => {
+                  onDeleteJob(jobToDelete.id);
+                  setJobToDelete(null);
+                }}
+                type="button"
+              >
+                Delete Job
+              </button>
+            </>
+          }
+          onClose={() => setJobToDelete(null)}
+          title="Delete Pending Job"
+        >
+          <p className="job-description">
+            Are you sure you want to delete <strong>{jobToDelete.title}</strong>? This cannot be undone.
+          </p>
+        </Modal>
+      ) : null}
     </DashboardShell>
   );
 }

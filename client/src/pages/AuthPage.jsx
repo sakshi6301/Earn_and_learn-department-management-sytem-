@@ -1,6 +1,6 @@
 import Field from "../components/common/Field";
 import FlashMessage from "../components/common/FlashMessage";
-import { getRegisterSuggestion, getSignInSuggestion } from "../utils/validation";
+import Modal from "../components/common/Modal";
 
 function AuthPage({
   authMode,
@@ -24,47 +24,53 @@ function AuthPage({
   return (
     <div className="page-shell">
       <section className="auth-screen">
-        <div className="brand-panel">
-          <div>
+        <div className="brand-panel auth-intro-panel">
+          <div className="auth-intro-copy">
             <p className="eyebrow">Samiti Earn & Learn</p>
-            <h1>Restricted MERN Workflow Portal For Providers, Students, And Department Heads</h1>
-            <p className="lead">
-              A cleaner flow for posting work, approving jobs, collecting student interest, and sending final approved
-              student counts to the organization.
-            </p>
+            <h1>Simple role-based access for providers, students, and department heads.</h1>
+            <p className="lead">Create your account, sign in, and continue your work from the correct dashboard.</p>
           </div>
 
-          <div className="flow-list">
-            <article>
-              <span>1</span>
-              <div>
-                <h2>Providers Register Work</h2>
-                <p>Money, hours, work type, location, contact details, and required students are captured.</p>
-              </div>
+          <div className="auth-role-list" aria-label="Portal roles">
+            <article className="auth-role-card">
+              <strong>Work Provider</strong>
+              <p>Post work opportunities and manage approved student support.</p>
             </article>
-            <article>
-              <span>2</span>
-              <div>
-                <h2>Department Head Approves</h2>
-                <p>Only approved jobs are released to students through role-restricted access.</p>
-              </div>
+            <article className="auth-role-card">
+              <strong>Student</strong>
+              <p>See approved work, apply, and track your progress in one place.</p>
             </article>
-            <article>
-              <span>3</span>
-              <div>
-                <h2>Students Apply</h2>
-                <p>Applications return to the department head before provider confirmation.</p>
-              </div>
+            <article className="auth-role-card">
+              <strong>Department Head</strong>
+              <p>Approve jobs, review applications, and keep records consistent.</p>
             </article>
           </div>
         </div>
 
-        <div className="auth-panel">
+        <div className="auth-panel auth-card-panel">
+          <div className="auth-card-header">
+            <p className="eyebrow">Access Portal</p>
+            <h2>{authMode === "register" ? "Create your account" : "Sign in to continue"}</h2>
+            <p className="muted">
+              {authMode === "register"
+                ? "Choose your role and fill in the required details."
+                : "Use your registered email and password."}
+            </p>
+          </div>
+
           <div className="auth-toggle">
-            <button className={`toggle-button ${authMode === "login" ? "active" : ""}`} onClick={() => onAuthModeChange("login")} type="button">
+            <button
+              className={`toggle-button ${authMode === "login" ? "active" : ""}`}
+              onClick={() => onAuthModeChange("login")}
+              type="button"
+            >
               Sign In
             </button>
-            <button className={`toggle-button ${authMode === "register" ? "active" : ""}`} onClick={() => onAuthModeChange("register")} type="button">
+            <button
+              className={`toggle-button ${authMode === "register" ? "active" : ""}`}
+              onClick={() => onAuthModeChange("register")}
+              type="button"
+            >
               Create Account
             </button>
           </div>
@@ -73,8 +79,10 @@ function AuthPage({
 
           {authMode === "login" && (
             <form className="auth-form" onSubmit={onLoginSubmit}>
-              <h2>Welcome Back</h2>
-              <p className="muted">Use your role account to enter the portal.</p>
+              <div className="auth-form-heading">
+                <h3>Welcome back</h3>
+                <p className="muted compact">Use your role account to enter the portal.</p>
+              </div>
               <Field error={errors.login.email} label="Email address">
                 <input
                   type="email"
@@ -83,7 +91,7 @@ function AuthPage({
                   required
                 />
               </Field>
-              <Field error={errors.login.password} hint="If you do not have an account yet, create one first." label="Password">
+              <Field error={errors.login.password} label="Password">
                 <input
                   type="password"
                   value={loginForm.password}
@@ -96,7 +104,7 @@ function AuthPage({
               </button>
               <div className="helper-links">
                 <button className="text-button" onClick={() => onAuthModeChange("register")} type="button">
-                  {getRegisterSuggestion()}
+                  Don't have an account? Create one.
                 </button>
                 <button className="text-button" onClick={() => onAuthModeChange("resetRequest")} type="button">
                   Forgot password?
@@ -107,8 +115,10 @@ function AuthPage({
 
           {authMode === "register" && (
             <form className="auth-form" onSubmit={onRegisterSubmit}>
-              <h2>Create Role Account</h2>
-              <p className="muted">After account creation, you will return to sign in with your new credentials.</p>
+              <div className="auth-form-heading">
+                <h3>Create account</h3>
+                <p className="muted compact">After account creation, you will return to sign in.</p>
+              </div>
 
               <Field label="Register as">
                 <select value={registerForm.role} onChange={(event) => onRegisterFormChange({ ...registerForm, role: event.target.value })}>
@@ -182,62 +192,59 @@ function AuthPage({
 
               <div className="helper-links">
                 <button className="text-button" onClick={() => onAuthModeChange("login")} type="button">
-                  {getSignInSuggestion()}
+                  Already have an account? Sign in.
                 </button>
               </div>
             </form>
           )}
+        </div>
+      </section>
 
-          {authMode === "resetRequest" && (
-            <form className="auth-form" onSubmit={onRequestResetSubmit}>
-              <h2>Reset Password</h2>
-              <p className="muted">Enter your account email. In this development build, a reset token will be shown to you directly.</p>
-              <Field error={errors.resetRequest.email} label="Account email">
-                <input type="email" value={resetRequestForm.email} onChange={(event) => setResetRequestForm({ ...resetRequestForm, email: event.target.value })} required />
-              </Field>
+      {authMode === "resetRequest" ? (
+        <Modal onClose={() => onAuthModeChange("login")} title="Reset Password">
+          <form className="auth-form" onSubmit={onRequestResetSubmit}>
+            <p className="muted">Enter your account email to get a reset token in this development build.</p>
+            <Field error={errors.resetRequest.email} label="Account email">
+              <input type="email" value={resetRequestForm.email} onChange={(event) => setResetRequestForm({ ...resetRequestForm, email: event.target.value })} required />
+            </Field>
+            <div className="helper-links">
+              <button className="text-button" onClick={() => onAuthModeChange("login")} type="button">
+                Back to sign in
+              </button>
+            </div>
+            <div className="inline-actions">
               <button className="primary-button" disabled={loading} type="submit">
                 {loading ? "Generating token..." : "Get Reset Token"}
               </button>
-              <div className="helper-links">
-                <button className="text-button" onClick={() => onAuthModeChange("login")} type="button">
-                  Back to sign in
-                </button>
-              </div>
-            </form>
-          )}
+            </div>
+          </form>
+        </Modal>
+      ) : null}
 
-          {authMode === "resetConfirm" && (
-            <form className="auth-form" onSubmit={onResetConfirmSubmit}>
-              <h2>Set New Password</h2>
-              <p className="muted">Use the reset token you received and choose a new password.</p>
-              <Field error={errors.resetConfirm.email} label="Account email">
-                <input type="email" value={resetConfirmForm.email} onChange={(event) => setResetConfirmForm({ ...resetConfirmForm, email: event.target.value })} required />
-              </Field>
-              <Field error={errors.resetConfirm.resetToken} label="Reset token">
-                <input value={resetConfirmForm.resetToken} onChange={(event) => setResetConfirmForm({ ...resetConfirmForm, resetToken: event.target.value.toUpperCase() })} required />
-              </Field>
-              <Field error={errors.resetConfirm.newPassword} label="New password">
-                <input type="password" value={resetConfirmForm.newPassword} onChange={(event) => setResetConfirmForm({ ...resetConfirmForm, newPassword: event.target.value })} required />
-              </Field>
-              <Field error={errors.resetConfirm.confirmPassword} label="Confirm new password">
-                <input type="password" value={resetConfirmForm.confirmPassword} onChange={(event) => setResetConfirmForm({ ...resetConfirmForm, confirmPassword: event.target.value })} required />
-              </Field>
+      {authMode === "resetConfirm" ? (
+        <Modal onClose={() => onAuthModeChange("login")} title="Set New Password">
+          <form className="auth-form" onSubmit={onResetConfirmSubmit}>
+            <p className="muted">Use the reset token you received and choose a new password.</p>
+            <Field error={errors.resetConfirm.email} label="Account email">
+              <input type="email" value={resetConfirmForm.email} onChange={(event) => setResetConfirmForm({ ...resetConfirmForm, email: event.target.value })} required />
+            </Field>
+            <Field error={errors.resetConfirm.resetToken} label="Reset token">
+              <input value={resetConfirmForm.resetToken} onChange={(event) => setResetConfirmForm({ ...resetConfirmForm, resetToken: event.target.value.toUpperCase() })} required />
+            </Field>
+            <Field error={errors.resetConfirm.newPassword} label="New password">
+              <input type="password" value={resetConfirmForm.newPassword} onChange={(event) => setResetConfirmForm({ ...resetConfirmForm, newPassword: event.target.value })} required />
+            </Field>
+            <Field error={errors.resetConfirm.confirmPassword} label="Confirm new password">
+              <input type="password" value={resetConfirmForm.confirmPassword} onChange={(event) => setResetConfirmForm({ ...resetConfirmForm, confirmPassword: event.target.value })} required />
+            </Field>
+            <div className="inline-actions">
               <button className="primary-button" disabled={loading} type="submit">
                 {loading ? "Resetting..." : "Reset Password"}
               </button>
-            </form>
-          )}
-
-          <div className="demo-accounts">
-            <p className="muted small">Demo accounts seeded by the backend</p>
-            <ul>
-              <li>Department head: head@samiti.org / head123</li>
-              <li>Provider: provider@trust.org / provider123</li>
-              <li>Student: student@college.edu / student123</li>
-            </ul>
-          </div>
-        </div>
-      </section>
+            </div>
+          </form>
+        </Modal>
+      ) : null}
     </div>
   );
 }
