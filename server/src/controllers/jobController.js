@@ -1,10 +1,19 @@
 import Application from "../models/Application.js";
 import Job from "../models/Job.js";
 
+const ASSIGNED_APPLICATION_STATUSES = ["approved", "completed"];
+const EDITABLE_JOB_STATUSES = ["pending"];
+const REVIEWABLE_JOB_STATUSES = ["approved", "rejected"];
+
 const mapJobWithCounts = async (job) => {
   const approvedStudents = await Application.countDocuments({
     job: job._id,
-    status: "approved"
+    status: { $in: ASSIGNED_APPLICATION_STATUSES }
+  });
+
+  const completedStudents = await Application.countDocuments({
+    job: job._id,
+    status: "completed"
   });
 
   return {
@@ -25,6 +34,8 @@ const mapJobWithCounts = async (job) => {
     description: job.description,
     status: job.status,
     approvedStudents,
+    completedStudents,
+    openPositions: Math.max(job.positions - approvedStudents, 0),
     createdAt: job.createdAt
   };
 };
@@ -69,12 +80,21 @@ export const getPendingJobs = async (_req, res) => {
 };
 
 export const updateJobStatus = async (req, res) => {
+  const nextStatus = req.body.status;
   const job = await Job.findById(req.params.id);
   if (!job) {
     return res.status(404).json({ message: "Job not found." });
   }
 
-  job.status = req.body.status;
+  if (!EDITABLE_JOB_STATUSES.includes(job.status)) {
+    return res.status(400).json({ message: `Jobs in ${job.status} state cannot be reviewed again.` });
+  }
+
+  if (!REVIEWABLE_JOB_STATUSES.includes(nextStatus)) {
+    return res.status(400).json({ message: "Job status must be approved or rejected." });
+  }
+
+  job.status = nextStatus;
   await job.save();
 
   res.json(await mapJobWithCounts(job));
@@ -90,7 +110,7 @@ export const updateProviderJob = async (req, res) => {
     return res.status(404).json({ message: "Job not found." });
   }
 
-  if (job.status !== "pending") {
+  if (!EDITABLE_JOB_STATUSES.includes(job.status)) {
     return res.status(400).json({ message: "Only pending jobs can be edited by the provider." });
   }
 
@@ -120,7 +140,7 @@ export const deleteProviderJob = async (req, res) => {
     return res.status(404).json({ message: "Job not found." });
   }
 
-  if (job.status !== "pending") {
+  if (!EDITABLE_JOB_STATUSES.includes(job.status)) {
     return res.status(400).json({ message: "Only pending jobs can be deleted by the provider." });
   }
 
@@ -138,7 +158,7 @@ export const getSummaryJobs = async (req, res) => {
     jobs.map(async (job) => {
       const approvedApplications = await Application.find({
         job: job._id,
-        status: "approved"
+        status: { $in: ASSIGNED_APPLICATION_STATUSES }
       }).populate("studentUser", "name phone email");
 
       return {
@@ -147,7 +167,10 @@ export const getSummaryJobs = async (req, res) => {
           id: item.studentUser._id,
           name: item.studentUser.name,
           phone: item.studentUser.phone,
-          email: item.studentUser.email
+          email: item.studentUser.email,
+          status: item.status,
+          approvedAt: item.approvedAt,
+          completedAt: item.completedAt
         }))
       };
     })

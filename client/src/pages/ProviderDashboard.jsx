@@ -154,11 +154,13 @@ function ProviderDashboard({
                   >
                     {job.approvedStudentDetails?.length ? (
                       <p className="helper-text">
-                        <strong>Approved students:</strong>{" "}
-                        {job.approvedStudentDetails.map((student) => `${student.name} (${student.phone})`).join(", ")}
+                        <strong>Assigned students:</strong>{" "}
+                        {job.approvedStudentDetails
+                          .map((student) => `${student.name} (${student.phone}) - ${capitalize(student.status)}`)
+                          .join(", ")}
                       </p>
                     ) : (
-                      <p className="helper-text">No students approved for this job yet.</p>
+                      <p className="helper-text">No students assigned to this job yet.</p>
                     )}
                   </JobCard>
                 ))
@@ -280,3 +282,7 @@ function ProviderDashboard({
 }
 
 export default ProviderDashboard;
+
+function capitalize(value) {
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}

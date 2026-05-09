@@ -8,6 +8,8 @@ import JobCard from "../components/common/JobCard";
 import Modal from "../components/common/Modal";
 import PasswordPanel from "../components/common/PasswordPanel";
 import StatusBadge from "../components/common/StatusBadge";
+import TableCard from "../components/common/TableCard";
+import { formatCurrency } from "../utils/reports";
 
 function StudentDashboard({
   changePasswordForm,
@@ -17,6 +19,7 @@ function StudentDashboard({
   filteredJobs,
   filters,
   message,
+  monthlyRows,
   onApplyFilter,
   onApplyToJob,
   onChangePasswordForm,
@@ -37,6 +40,7 @@ function StudentDashboard({
   const navItems = useMemo(
     () => [
       { id: "opportunities", label: "Opportunities", note: "Find and apply for work" },
+      { id: "progress", label: "Progress", note: "Monthly earnings and work done" },
       { id: "applications", label: "Applications", note: "Track your current applications" },
       { id: "profile", label: "Profile", note: "Student details and readiness" },
       { id: "security", label: "Security", note: "Password management" }
@@ -108,6 +112,34 @@ function StudentDashboard({
         </section>
       ) : null}
 
+      {activeSection === "progress" ? (
+        <section className="dashboard-single">
+          <section className="panel panel-stack">
+            <div className="panel-heading">
+              <div>
+                <h2>Monthly Earnings And Work Done</h2>
+                <p className="section-note">Completed work is tracked here so you can see what you earned and when it was finished.</p>
+              </div>
+            </div>
+            <TableCard
+              columns={["Month", "Completed Work", "Earnings", "Recent Work"]} 
+              emptyMessage="No completed work records are available yet."
+              rows={monthlyRows.map((row) => [
+                <td key="month">{row.label}</td>,
+                <td key="count">{row.jobs.length}</td>,
+                <td key="earnings">{formatCurrency(row.totalEarnings)}</td>,
+                <td key="recent">
+                  {row.jobs
+                    .slice(0, 3)
+                    .map((job) => `${job.title} (${formatCurrency(job.pay)})`)
+                    .join(", ")}
+                </td>
+              ])}
+            />
+          </section>
+        </section>
+      ) : null}
+
       {activeSection === "applications" ? (
         <section className="dashboard-single">
           <section className="panel panel-stack">
@@ -150,6 +182,9 @@ function StudentDashboard({
                       </div>
                       <div>
                         <strong>Applied on</strong>{formatDate(application.createdAt)}
+                      </div>
+                      <div>
+                        <strong>Completed on</strong>{application.completedAt ? formatDate(application.completedAt) : "Not completed yet"}
                       </div>
                     </div>
                     {application.status === "pending" ? (

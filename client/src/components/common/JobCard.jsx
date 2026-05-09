@@ -26,7 +26,7 @@ function JobCard({ actions, children, job }) {
           {job.workType}
         </div>
         <div>
-          <strong>Approved / needed</strong>
+          <strong>Assigned / needed</strong>
           {job.approvedStudents} / {job.positions}
         </div>
       </div>

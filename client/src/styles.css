@@ -583,6 +583,11 @@ textarea {
   color: var(--success);
 }
 
+.status-completed {
+  background: #e6f1ff;
+  color: var(--primary-dark);
+}
+
 .status-rejected {
   background: #fde9e9;
   color: var(--danger);

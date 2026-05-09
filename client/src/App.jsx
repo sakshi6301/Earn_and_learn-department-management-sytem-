@@ -7,6 +7,13 @@ import ProviderDashboard from "./pages/ProviderDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 import { filterApplications, filterJobs, filterSummaryJobs, withinDateRange } from "./utils/filters";
 import {
+  buildHeadMonthlyReport,
+  buildHeadStudentRecords,
+  buildStudentMetrics,
+  buildStudentMonthlyRows,
+  formatCurrency
+} from "./utils/reports";
+import {
   createEmptyChangePasswordForm,
   createEmptyJobForm,
   createEmptyRegisterForm,
@@ -50,7 +57,12 @@ function App() {
     headSummaryStatus: "all",
     headSummaryProvider: "",
     headSummaryFrom: "",
-    headSummaryTo: ""
+    headSummaryTo: "",
+    headReportQuery: "",
+    headReportStatus: "all",
+    headReportProvider: "",
+    headReportFrom: "",
+    headReportTo: ""
   });
   const [errors, setErrors] = useState({
     login: {},
@@ -68,10 +80,9 @@ function App() {
   const [dashboardData, setDashboardData] = useState({
     myJobs: [],
     approvedJobs: [],
-    pendingJobs: [],
     summaryJobs: [],
     myApplications: [],
-    pendingApplications: []
+    headApplications: []
   });
   const [message, setMessage] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -89,6 +100,24 @@ function App() {
     }
   }, [session.user]);
 
+  const studentMetrics = useMemo(
+    () => buildStudentMetrics(dashboardData.myApplications),
+    [dashboardData.myApplications]
+  );
+
+  const studentMonthlyRows = useMemo(
+    () => buildStudentMonthlyRows(dashboardData.myApplications),
+    [dashboardData.myApplications]
+  );
+
+  const totalHeadEarnings = useMemo(
+    () =>
+      dashboardData.headApplications
+        .filter((application) => application.status === "completed")
+        .reduce((sum, application) => sum + (Number(application.job?.pay) || 0), 0),
+    [dashboardData.headApplications]
+  );
+
   const stats = useMemo(() => {
     if (role === "provider") {
       return [
@@ -101,20 +130,20 @@ function App() {
 
     if (role === "student") {
       return [
-        { label: "Visible jobs", value: dashboardData.approvedJobs.length },
-        { label: "Your applications", value: dashboardData.myApplications.length },
-        { label: "Approved applications", value: dashboardData.myApplications.filter((item) => item.status === "approved").length },
-        { label: "Pending decisions", value: dashboardData.myApplications.filter((item) => item.status === "pending").length }
+        { label: "This month earnings", value: formatCurrency(studentMetrics.monthlyEarnings) },
+        { label: "Total earnings", value: formatCurrency(studentMetrics.totalEarnings) },
+        { label: "Work completed", value: studentMetrics.completedCount },
+        { label: "Active applications", value: studentMetrics.activeApplications }
       ];
     }
 
     return [
-      { label: "Pending job approvals", value: dashboardData.pendingJobs.length },
-      { label: "Pending student approvals", value: dashboardData.pendingApplications.length },
-      { label: "Approved jobs", value: dashboardData.summaryJobs.filter((job) => job.status === "approved").length },
-      { label: "Students sent to providers", value: dashboardData.summaryJobs.reduce((sum, job) => sum + job.approvedStudents, 0) }
+      { label: "Pending job approvals", value: dashboardData.summaryJobs.filter((job) => job.status === "pending").length },
+      { label: "Pending student approvals", value: dashboardData.headApplications.filter((item) => item.status === "pending").length },
+      { label: "Completed work", value: dashboardData.headApplications.filter((item) => item.status === "completed").length },
+      { label: "Student earnings", value: formatCurrency(totalHeadEarnings) }
     ];
-  }, [dashboardData, role]);
+  }, [dashboardData, role, studentMetrics, totalHeadEarnings]);
 
   const filteredProviderJobs = useMemo(
     () => filterJobs(dashboardData.summaryJobs, filters.providerJobs),
@@ -133,19 +162,19 @@ function App() {
 
   const filteredHeadJobs = useMemo(
     () =>
-      dashboardData.pendingJobs.filter((job) => {
+      dashboardData.summaryJobs.filter((job) => {
         const matchesQuery = filterJobs([job], filters.headJobsQuery).length > 0;
         const matchesStatus = filters.headJobsStatus === "all" || job.status === filters.headJobsStatus;
         const matchesProvider = !filters.headJobsProvider || job.providerName.toLowerCase().includes(filters.headJobsProvider.toLowerCase());
         const matchesDate = withinDateRange(job.createdAt, filters.headJobsFrom, filters.headJobsTo);
         return matchesQuery && matchesStatus && matchesProvider && matchesDate;
       }),
-    [dashboardData.pendingJobs, filters]
+    [dashboardData.summaryJobs, filters]
   );
 
   const filteredHeadApplications = useMemo(
     () =>
-      dashboardData.pendingApplications.filter((application) => {
+      dashboardData.headApplications.filter((application) => {
         const matchesQuery = filterApplications([application], filters.headApplicationsQuery).length > 0;
         const matchesStatus =
           filters.headApplicationsStatus === "all" || application.status === filters.headApplicationsStatus;
@@ -155,10 +184,10 @@ function App() {
         const matchesDate = withinDateRange(application.createdAt, filters.headApplicationsFrom, filters.headApplicationsTo);
         return matchesQuery && matchesStatus && matchesProvider && matchesDate;
       }),
-    [dashboardData.pendingApplications, filters]
+    [dashboardData.headApplications, filters]
   );
 
-  const filteredHeadSummary = useMemo(
+  const filteredHeadSummaryJobs = useMemo(
     () =>
       dashboardData.summaryJobs.filter((job) => {
         const matchesQuery = filterSummaryJobs([job], filters.headSummaryQuery).length > 0;
@@ -171,6 +200,31 @@ function App() {
     [dashboardData.summaryJobs, filters]
   );
 
+  const filteredHeadReportApplications = useMemo(
+    () =>
+      dashboardData.headApplications.filter((application) => {
+        const matchesQuery = filterApplications([application], filters.headReportQuery).length > 0;
+        const matchesStatus = filters.headReportStatus === "all" || application.status === filters.headReportStatus;
+        const matchesProvider =
+          !filters.headReportProvider ||
+          application.job?.providerName?.toLowerCase().includes(filters.headReportProvider.toLowerCase());
+        const reportDate = application.completedAt || application.approvedAt || application.createdAt;
+        const matchesDate = withinDateRange(reportDate, filters.headReportFrom, filters.headReportTo);
+        return matchesQuery && matchesStatus && matchesProvider && matchesDate;
+      }),
+    [dashboardData.headApplications, filters]
+  );
+
+  const headStudentRecords = useMemo(
+    () => buildHeadStudentRecords(filteredHeadReportApplications),
+    [filteredHeadReportApplications]
+  );
+
+  const headMonthlyReport = useMemo(
+    () => buildHeadMonthlyReport(filteredHeadReportApplications),
+    [filteredHeadReportApplications]
+  );
+
   const persistSession = (nextSession) => {
     setSession(nextSession);
     localStorage.setItem("earn-learn-session", JSON.stringify(nextSession));
@@ -181,10 +235,9 @@ function App() {
     setDashboardData({
       myJobs: [],
       approvedJobs: [],
-      pendingJobs: [],
       summaryJobs: [],
       myApplications: [],
-      pendingApplications: []
+      headApplications: []
     });
     localStorage.removeItem("earn-learn-session");
     setAuthToken("");
@@ -313,15 +366,13 @@ function App() {
       }
 
       if (activeRole === "head") {
-        const [pendingJobs, pendingApplications, summaryJobs] = await Promise.all([
-          api.get("/jobs/pending"),
-          api.get("/applications/pending"),
+        const [headApplications, summaryJobs] = await Promise.all([
+          api.get("/applications/all"),
           api.get("/jobs/summary")
         ]);
         setDashboardData((previous) => ({
           ...previous,
-          pendingJobs: pendingJobs.data,
-          pendingApplications: pendingApplications.data,
+          headApplications: headApplications.data,
           summaryJobs: summaryJobs.data
         }));
       }
@@ -517,6 +568,7 @@ function App() {
         filteredJobs={filteredStudentJobs}
         filters={filters}
         message={message}
+        monthlyRows={studentMonthlyRows}
         onApplyFilter={setFilters}
         onApplyToJob={applyToJob}
         onChangePasswordForm={setChangePasswordForm}
@@ -539,8 +591,10 @@ function App() {
       errors={errors}
       filteredApplications={filteredHeadApplications}
       filteredJobs={filteredHeadJobs}
-      filteredSummary={filteredHeadSummary}
+      filteredSummaryJobs={filteredHeadSummaryJobs}
       filters={filters}
+      headMonthlyReport={headMonthlyReport}
+      headStudentRecords={headStudentRecords}
       message={message}
       onApplyFilter={setFilters}
       onChangePasswordForm={setChangePasswordForm}
